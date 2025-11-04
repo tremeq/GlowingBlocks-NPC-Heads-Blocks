@@ -3,35 +3,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>fr.skytasul</groupId>
-	<artifactId>glowingentities</artifactId>
-	<version>1.4.8</version>
+	<groupId>com.tremeq</groupId>
+	<artifactId>glowingblocks</artifactId>
+	<version>1.0.0</version>
 
-	<name>GlowingEntities</name>
-	<description>A Spigot util to easily make entities glow.</description>
-	<url>https://github.com/SkytAsul/GlowingEntities</url>
-
-	<licenses>
-		<license>
-			<name>MIT License</name>
-			<url>http://www.opensource.org/licenses/mit-license.php</url>
-		</license>
-	</licenses>
-
-	<developers>
-		<developer>
-			<name>SkytAsul</name>
-			<email>skytasul@gmail.com</email>
-			<url>https://skytasul.fr</url>
-		</developer>
-	</developers>
-
-	<scm>
-		<connection>scm:git:git://github.com/SkytAsul/GlowingEntities.git</connection>
-		<developerConnection>
-			scm:git:ssh://github.com:SkytAsul/GlowingEntities.git</developerConnection>
-		<url>http://github.com/SkytAsul/GlowingEntities/tree/master</url>
-	</scm>
+	<name>GlowingBlocks</name>
+	<description>A Paper plugin providing commands to use the GlowingEntities API for making blocks and NPCs glow.</description>
+	<url>https://github.com/tremeq/GlowingEntities</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -44,6 +22,10 @@
 			<id>papermc</id>
 			<url>https://repo.papermc.io/repository/maven-public/</url>
 		</repository>
+		<repository>
+			<id>citizens-repo</id>
+			<url>https://maven.citizensnpcs.co/repo</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
@@ -55,19 +37,8 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>fr.skytasul</groupId>
-			<artifactId>reflection-remapper</artifactId>
-			<version>2.0.0</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>fr.skytasul</groupId>
-			<artifactId>reflection-mappings-shrieker</artifactId>
-			<version>2.0.0</version>
-			<scope>provided</scope>
-		</dependency>
+		<!-- GlowingEntities sources are included directly in this project -->
+		<!-- No external dependency needed -->
 
 		<dependency>
 			<groupId>io.netty</groupId>
@@ -82,60 +53,58 @@
 			<version>24.0.0</version>
 			<scope>provided</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>net.citizensnpcs</groupId>
+			<artifactId>citizens-main</artifactId>
+			<version>2.0.35-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
 		<plugins>
 			<plugin>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.2.0</version>
-				<executions>
-					<execution>
-						<id>attach-source</id>
-						<phase>compile</phase>
-						<goals>
-							<goal>jar-no-fork</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.1</version>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.5.0</version>
 				<executions>
 					<execution>
-						<id>attach-javadocs</id>
+						<phase>package</phase>
 						<goals>
-							<goal>jar</goal>
+							<goal>shade</goal>
 						</goals>
+						<configuration>
+							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<!-- Shade all compile-scope dependencies (glowingentities + its transitive dependencies) -->
+							<filters>
+								<filter>
+									<!-- Exclude signatures to avoid SecurityException -->
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
+						</configuration>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>3.0.1</version>
-				<executions>
-					<execution>
-						<id>sign-artifacts</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.sonatype.central</groupId>
-				<artifactId>central-publishing-maven-plugin</artifactId>
-				<version>0.6.0</version>
-				<extensions>true</extensions>
-				<configuration>
-					<publishingServerId>central</publishingServerId>
-					<autoPublish>true</autoPublish>
-					<waitUntil>published</waitUntil>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
